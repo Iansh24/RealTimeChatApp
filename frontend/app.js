@@ -1,26 +1,45 @@
 let stompClient = null;
 
-// Backend URL (correct)
-const BASE_URL = "https://realtimechat-4xu5.onrender.com";
+const BASE_URL = "https://realtimechat-viy1.onrender.com";
 
+// 🔥 Wake server first (Render fix)
+function wakeServerAndConnect() {
+    fetch(BASE_URL)
+        .then(() => {
+            console.log("Server awake");
+            connect();
+        })
+        .catch(() => {
+            console.log("Waking server...");
+            setTimeout(wakeServerAndConnect, 3000);
+        });
+}
+
+// 🔌 WebSocket connect
 function connect() {
+
     const socket = new SockJS(`${BASE_URL}/chat`);
     stompClient = Stomp.over(socket);
 
+    // Disable debug logs
+    stompClient.debug = null;
+
     stompClient.connect({}, function () {
-        console.log("Connected ");
+        console.log("Connected ✅");
 
         stompClient.subscribe('/user/queue/messages', function (msg) {
             showMessage(JSON.parse(msg.body));
         });
 
-    }, function(error) {
-        console.error("WebSocket error ", error);
+    }, function (error) {
+        console.error("WebSocket error:", error);
 
+        // retry connection
         setTimeout(connect, 5000);
     });
 }
 
+// 📤 Send message
 function sendMessage() {
     if (!stompClient || !stompClient.connected) {
         alert("Connecting... please wait");
@@ -40,6 +59,7 @@ function sendMessage() {
     document.getElementById('message').value = "";
 }
 
+// 📥 Show message
 function showMessage(message) {
     const chat = document.getElementById('chat');
 
@@ -69,6 +89,7 @@ function showMessage(message) {
     chat.scrollTop = chat.scrollHeight;
 }
 
+// 📡 Load previous chat (API)
 function loadChat() {
     const sender = document.getElementById('sender').value;
     const receiver = document.getElementById('receiver').value;
@@ -84,16 +105,22 @@ function loadChat() {
                     const chat = document.getElementById('chat');
                     chat.innerHTML = "";
 
-                    // merge both chats
                     const allMessages = [...data1, ...data2];
 
-                    // sort by timestamp
-                    allMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                    allMessages.sort((a, b) =>
+                        new Date(a.timestamp) - new Date(b.timestamp)
+                    );
 
                     allMessages.forEach(msg => showMessage(msg));
                 });
         })
         .catch(err => console.error("API error", err));
 }
-connect();
+
+// 🚀 Start app (IMPORTANT)
+setTimeout(() => {
+    wakeServerAndConnect();
+}, 2000);
+
+// Optional polling
 setInterval(loadChat, 3000);
