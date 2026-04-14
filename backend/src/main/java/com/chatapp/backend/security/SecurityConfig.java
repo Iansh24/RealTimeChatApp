@@ -12,9 +12,10 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .csrf().disable()
+            .csrf(csrf -> csrf.disable())   
+
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/chat/**").permitAll()   // allow websocket
+                .requestMatchers("/chat/**").permitAll()   
                 .requestMatchers("/ws/**").permitAll()
                 .anyRequest().permitAll()
             );
