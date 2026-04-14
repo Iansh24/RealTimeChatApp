@@ -2,16 +2,17 @@ let stompClient = null;
 
 const BASE_URL = "https://realtimechat-viy1.onrender.com";
 
-// 🔥 Wake server first (Render fix)
+// 🔥 Wake server first (Render fix + 503 handling)
 function wakeServerAndConnect() {
     fetch(BASE_URL)
-        .then(() => {
-            console.log("Server awake");
+        .then(res => {
+            if (!res.ok) throw new Error("Server not ready");
+            console.log("Server awake ✅");
             connect();
         })
         .catch(() => {
             console.log("Waking server...");
-            setTimeout(wakeServerAndConnect, 3000);
+            setTimeout(wakeServerAndConnect, 5000);
         });
 }
 
@@ -21,8 +22,7 @@ function connect() {
     const socket = new SockJS(`${BASE_URL}/chat`);
     stompClient = Stomp.over(socket);
 
-    // Disable debug logs
-    stompClient.debug = null;
+    stompClient.debug = null; // disable logs
 
     stompClient.connect({}, function () {
         console.log("Connected ✅");
@@ -89,17 +89,23 @@ function showMessage(message) {
     chat.scrollTop = chat.scrollHeight;
 }
 
-// 📡 Load previous chat (API)
+// 📡 Load previous chat (with error handling)
 function loadChat() {
     const sender = document.getElementById('sender').value;
     const receiver = document.getElementById('receiver').value;
 
     fetch(`${BASE_URL}/api/chat/${sender}/${receiver}`)
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("API failed");
+            return res.json();
+        })
         .then(data1 => {
 
             fetch(`${BASE_URL}/api/chat/${receiver}/${sender}`)
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error("API failed");
+                    return res.json();
+                })
                 .then(data2 => {
 
                     const chat = document.getElementById('chat');
@@ -114,13 +120,13 @@ function loadChat() {
                     allMessages.forEach(msg => showMessage(msg));
                 });
         })
-        .catch(err => console.error("API error", err));
+        .catch(err => console.log("API not ready yet..."));
 }
 
-// 🚀 Start app (IMPORTANT)
-setTimeout(() => {
+// 🚀 Start app (BEST METHOD)
+window.onload = () => {
     wakeServerAndConnect();
-}, 2000);
+};
 
 // Optional polling
-setInterval(loadChat, 3000);
+setInterval(loadChat, 5000);
