@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . .
 
 # Give permission to mvnw
-RUN chmod +x mvnwSS
+RUN chmod +x mvnw
 
 # Build project
 RUN ./mvnw clean package -DskipTests
