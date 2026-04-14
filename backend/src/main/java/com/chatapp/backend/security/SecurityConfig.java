@@ -10,12 +10,13 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         http
-            .csrf(csrf -> csrf.disable()) 
+            .csrf().disable()
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/chat/**").permitAll()   
-                    .requestMatchers("/api/**").permitAll()    
-                    .anyRequest().permitAll()
+                .requestMatchers("/chat/**").permitAll()   // allow websocket
+                .requestMatchers("/ws/**").permitAll()
+                .anyRequest().permitAll()
             );
 
         return http.build();

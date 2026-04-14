@@ -22,27 +22,25 @@ public class WebSocketChatController {
     @MessageMapping("/private-message")
     public void sendPrivateMessage(Message message) {
 
-        // Set timestamp
         message.setTimestamp(LocalDateTime.now());
 
-        // Save in MongoDB
         Message savedMessage = messageRepository.save(message);
 
-        // Send to RECEIVER only
+        // send to receiver
         messagingTemplate.convertAndSendToUser(
                 message.getReceiver(),
                 "/queue/messages",
                 savedMessage
         );
 
-        // (Optional) also send back to sender (for UI sync)
+        // send back to sender
         messagingTemplate.convertAndSendToUser(
                 message.getSender(),
                 "/queue/messages",
                 savedMessage
         );
 
-        System.out.println("MESSAGE SENT FROM: " + message.getSender() +
-                            " TO: " + message.getReceiver());
+        System.out.println("MESSAGE SENT FROM: " +
+                message.getSender() + " TO: " + message.getReceiver());
     }
 }
