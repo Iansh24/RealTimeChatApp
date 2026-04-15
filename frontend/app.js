@@ -1,6 +1,6 @@
 let stompClient = null;
 
-const BASE_URL = "https://realtimechat-viy1.onrender.com";
+const BASE_URL = "https://realtimechatapp24.onrender.com";
 
 // 🔥 Wake server first (Render fix + 503 handling)
 function wakeServerAndConnect() {
