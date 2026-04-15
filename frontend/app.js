@@ -1,10 +1,12 @@
 let stompClient = null;
 
-const BASE_URL = "https://realtimechatapp24.onrender.com";
+const DEFAULT_BASE_URL = "https://realtimechatapp24.onrender.com";
+const BASE_URL = document.querySelector('meta[name="api-base-url"]')?.content?.trim() || DEFAULT_BASE_URL;
+const HEALTH_URL = `${BASE_URL}/api/health`;
 
 // 🔥 Wake server first (Render fix + 503 handling)
 function wakeServerAndConnect() {
-    fetch(BASE_URL)
+    fetch(HEALTH_URL)
         .then(res => {
             if (!res.ok) throw new Error("Server not ready");
             console.log("Server awake ✅");
@@ -94,14 +96,21 @@ function loadChat() {
     const sender = document.getElementById('sender').value;
     const receiver = document.getElementById('receiver').value;
 
-    fetch(`${BASE_URL}/api/chat/${sender}/${receiver}`)
+    if (!sender || !receiver) {
+        return;
+    }
+
+    const encodedSender = encodeURIComponent(sender);
+    const encodedReceiver = encodeURIComponent(receiver);
+
+    fetch(`${BASE_URL}/api/chat/${encodedSender}/${encodedReceiver}`)
         .then(res => {
             if (!res.ok) throw new Error("API failed");
             return res.json();
         })
         .then(data1 => {
 
-            fetch(`${BASE_URL}/api/chat/${receiver}/${sender}`)
+            fetch(`${BASE_URL}/api/chat/${encodedReceiver}/${encodedSender}`)
                 .then(res => {
                     if (!res.ok) throw new Error("API failed");
                     return res.json();
